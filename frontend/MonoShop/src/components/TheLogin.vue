@@ -122,7 +122,6 @@ const handleSubmit = async () => {
   
   try {
     const response = await axios.post(`http://localhost:3000/members/login`, members);
-    console.log("Login response:", response.data);
     
     login.value = response.data.login;
     message.value = response.data.message;

@@ -126,7 +126,6 @@ const messageType = ref('');
 const imgOK = ref(false);
 const fileMessage = ref(null);
 const file = ref(null);
-// ใช้ imageTimestamp จาก authStore แทน
 const imageTimestamp = computed(() => authStore.imageTimestamp);
 
 // ตรวจสอบว่า user เป็น admin หรือไม่
@@ -154,7 +153,6 @@ const getMember = async () => {
         role.value = member.value.role;
         login.value = member.value.login;
     } catch (err) {
-        console.log(err.message);
         showMessage('Failed to load member data', 'error');
     }
 };
@@ -248,7 +246,6 @@ const saveChanges = async () => {
         isEditing.value = false;
         showMessage(response.data.message || 'Profile updated successfully!', 'success');
     } catch (err) {
-        console.log('Error:', err);
         const errorMessage = err.response?.data?.message || err.message || 'Failed to update profile. Please try again.';
         showMessage(errorMessage, 'error');
     } finally {

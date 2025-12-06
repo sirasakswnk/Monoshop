@@ -41,27 +41,27 @@ import axios from 'axios';
 axios.defaults.withCredentials = true
 
 
-const carts=ref([])//รับข้อมูล Master
-const mem_email=ref(null) //ข้อมูลจาก Cookie ที่ Login
+const carts=ref([])
+const mem_email=ref(null) 
 
 
 const formattedDate=(dateStr)=> {
     const date = new Date(dateStr);
     const year = date.getFullYear();
-    const month = String(date.getMonth()+ 1).padStart(2, '0'); // เดือนเริ่มต้นที่ 0, จึงต้อง +1
+    const month = String(date.getMonth()+ 1).padStart(2, '0'); 
     const day = String(date.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
 }
 onMounted(async ()=>{
-    await getMember() // ตรวจสอบผู้ใช้ -->อ่านค่าจาก Cookie
-    await getCartList() // อ่านข้อมูลตะกร้าทั้งหมดของผู้ใช้งาน
+    await getMember() 
+    await getCartList() 
 })
 
 
 const getCartList=async ()=>{
-    let customer ={ id:mem_email.value} // ทำเป็น Object
+    let customer ={ id:mem_email.value} 
     console.log(customer)
-    await axios.post(`http://localhost:3000/carts/getcartbycus`,customer) // ใช้การ POST
+    await axios.post(`http://localhost:3000/carts/getcartbycus`,customer) 
         .then(res => {
             carts.value = res.data
         })

@@ -236,7 +236,6 @@ onMounted(async () => {
     
     try {
         const res = await axios.get(`http://localhost:3000/products/${id.value}`);
-        console.log('Product data:', res.data);
         products.value = res.data;
     } catch (err) {
         console.error('Error loading product:', err.message);
@@ -244,7 +243,7 @@ onMounted(async () => {
     }
 });
 
-// Helper method สำหรับ format ราคา
+
 const formatPrice = (price) => {
     return new Intl.NumberFormat('th-TH', {
         minimumFractionDigits: 2,
@@ -252,12 +251,11 @@ const formatPrice = (price) => {
     }).format(price);
 };
 
-// Helper method สำหรับจัดการ image error
+
 const handleImageError = (event) => {
     event.target.src = 'https://via.placeholder.com/400x400?text=No+Image';
 };
 
-// ตรวจสอบ role ของ user
 const checkUserRole = async () => {
     try {
         const res = await axios.get(`http://localhost:3000/members/detail`);
@@ -270,7 +268,7 @@ const checkUserRole = async () => {
     }
 };
 
-// เริ่มแก้ไข
+
 const startEdit = (pd) => {
     if (!isAdmin.value) {
         alert('คุณไม่มีสิทธิ์แก้ไขสินค้า');
@@ -286,13 +284,11 @@ const startEdit = (pd) => {
     message.value = '';
 };
 
-// ยกเลิกการแก้ไข
 const cancelEdit = () => {
     isEditing.value = false;
     message.value = '';
 };
 
-// บันทึกการแก้ไข
 const saveProduct = async () => {
     if (!isAdmin.value) {
         alert('คุณไม่มีสิทธิ์แก้ไขสินค้า');
@@ -314,7 +310,7 @@ const saveProduct = async () => {
             }
         );
         
-        // Refresh ข้อมูลสินค้าจาก server
+   
         try {
             const res = await axios.get(`http://localhost:3000/products/${id.value}`);
             products.value = res.data;
@@ -346,7 +342,6 @@ const saveProduct = async () => {
     }
 };
 
-// เมื่อ Click เพื่อเพิ่มสินค้า ตรวจสอบการ Login ก่อน
 const chkLogin = async () => {
     if (isLoading.value) return;
     
@@ -356,8 +351,6 @@ const chkLogin = async () => {
         const res = await axios.get(`http://localhost:3000/members/detail`);
         login.value = res.data.login;
         mem_email.value = res.data.mem_email;
-        
-        console.log('Login status:', login.value);
 
         if (login.value) {
             await chkCart();
@@ -379,9 +372,7 @@ const chkLogin = async () => {
     }
 };
 
-// ตรวจสอบตะกร้าค้าง
 const chkCart = async () => {
-    console.log('chkCart');
     
     const members = {
         mem_email: mem_email.value
@@ -389,13 +380,10 @@ const chkCart = async () => {
     
     try {
         const response = await axios.post(`http://localhost:3000/carts/chkcart`, members);
-        console.log('Check cart response:', response.data);
         
         if (response.data.cartExists) {
             cartId.value = response.data.cartId;
         }
-        
-        console.log("cartId:", cartId.value);
     } catch (err) {
         console.error('Error in chkCart:', err);
     }
@@ -403,7 +391,6 @@ const chkCart = async () => {
 
 // สร้างตะกร้า
 const addCart = async () => {
-    console.log("addCart");
     
     const customer = {
         cusId: mem_email.value
@@ -411,7 +398,7 @@ const addCart = async () => {
     
     try {
         const response = await axios.post(`http://localhost:3000/carts/addcart`, customer);
-        console.log('Add cart response:', response.data);
+
         
         backendMessage.value = response.data.messageAddCart;
         cartId.value = response.data.cartId || response.data.messageAddCart;
@@ -423,7 +410,6 @@ const addCart = async () => {
 
 // เอาสินค้าใส่ตะกร้า
 const addCartDtl = async () => {
-    console.log("addCartDtl");
     
     if (!products.value || products.value.length === 0) {
         throw new Error('ไม่พบข้อมูลสินค้า');
@@ -434,8 +420,7 @@ const addCartDtl = async () => {
         pdId: id.value,
         pdPrice: products.value[0].price
     };
-    
-    console.log('Cart detail:', cartdetail);
+
     
     try {
         const response = await axios.post(
@@ -443,8 +428,7 @@ const addCartDtl = async () => {
             cartdetail,
             { withCredentials: true }
         );
-        
-        console.log('Add cart detail response:', response.data);
+
         
         // อัพเดท Store
         cartStore.updateQty();

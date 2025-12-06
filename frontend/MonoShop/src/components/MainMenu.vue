@@ -47,11 +47,6 @@
               <CartInfo />
             </li>
             
-            <!-- <li v-if="login" class="nav-item">
-              <button class="btn btn-logout rounded-pill px-3" @click="memLogout">
-                <i class="bi bi-box-arrow-right me-1"></i> Logout
-              </button>
-            </li> -->
 
             <li v-if="login" class="nav-item dropdown">
               <a class="nav-link dropdown-toggle d-flex align-items-center gap-2 plant-account" href="#" role="button"
@@ -130,7 +125,6 @@ const cartStore = useCartStore();
 const cartCount = computed(() => cartStore.displayQty || 0);
 const isAdmin = computed(() => role.value === "admin");
 
-// ใช้ imageTimestamp จาก authStore แทน
 const profileImageUrl = computed(() => {
   if (imgOK.value && mem_email.value) {
     return `http://localhost:3000/img_mem/${mem_email.value}.jpg?timestamp=${authStore.imageTimestamp}`;
@@ -140,7 +134,6 @@ const profileImageUrl = computed(() => {
 
 const handleImageError = () => {
   if (imgOK.value) {
-    console.warn("Falling back to default avatar.");
     imgOK.value = false;
   }
 };
@@ -184,13 +177,11 @@ const getMember = async () => {
     }
   } catch (err) {
     if (err.response?.status === 401) {
-      console.log("Not logged in");
       clearMemberData();
       if (authStore.isLogin) {
         authStore.logout();
       }
     } else {
-      console.error("Error getting member:", err.message);
       clearMemberData();
       if (authStore.isLogin) {
         authStore.logout();
@@ -218,7 +209,6 @@ const memLogout = async () => {
       authStore.logout();
       router.push("/");
     } catch (err) {
-      console.error("Logout error:", err);
       clearMemberData();
       authStore.logout();
       router.push("/");
@@ -243,11 +233,9 @@ const performSearch = () => {
 };
 
 onMounted(async () => {
-  console.log("authStore.isLogin:", authStore.isLogin);
   login.value = authStore.isLogin;
   syncSearchFromRoute();
   await getMember();
-  console.log("login.value:", login.value);
 });
 
 watch(

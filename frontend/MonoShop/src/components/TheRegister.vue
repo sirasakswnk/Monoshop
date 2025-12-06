@@ -208,7 +208,6 @@ const handleSubmit = async () => {
 
     try {
         const response = await axios.post(`http://localhost:3000/members`, members);
-        console.log(response.data);
         regist.value = response.data.register;
         message.value = response.data.message || 'ลงทะเบียนสำเร็จ!';
         

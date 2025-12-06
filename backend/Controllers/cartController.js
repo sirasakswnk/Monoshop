@@ -13,7 +13,6 @@ const getUserFromToken = (req) => {
         const scKey = process.env.SECRET_KEY;
         return jwt.verify(token, scKey);
     } catch (err) {
-        console.error("Token verification failed:", err.message);
         return null;
     }
 };
@@ -28,36 +27,27 @@ const ensureAdmin = (req, res) => {
 };
 
 export async function chkCart(req, res) {
-    console.log(`POST CART customer ${req.body.mem_email} /chkCart is Requested!!.`)
-    
     if (req.body.mem_email == null) {
         return res.json({ error: true, errormessage: "Please login first" });
     }
     
     try {
-        console.log(`Checking cart for ${req.body.mem_email}`);
         const result = await database.query({
             text: `SELECT * FROM carts WHERE "cusId" = $1 AND "cartCf" !=true `,
             values: [req.body.mem_email]
         });
         
         if (result.rows[0] != null) {
-            console.log(`Found existing cart: ${result.rows[0].cartId}`);
             return res.json({ cartExists: true,cartId:result.rows[0].cartId });
         } else {
-            console.log(`No cart found for ${req.body.mem_email}`);
             return res.json({ cartExists: false, errormessage: "No active cart found" });
         }
     } catch (err) {
-        console.error('Error in chkCart:', err);
         return res.json({ error: true, errormessage: err.message });
     }
 }
 
 export async function postCarts(req, res) {
-  console.log(`POST /CART is requested `);
-
-  // ✅ ประกาศตัวแปรไว้หัวฟังก์ชันให้หมด
   const now = new Date();
   const year = now.getFullYear();
   const month = String(now.getMonth() + 1).padStart(2, "0");
@@ -97,21 +87,18 @@ export async function postCarts(req, res) {
 
 
 export async function postCartDtl(req, res) {
-  console.log(`POST /CARTDETAIL is requested `);
   try {
-    // ก่อนจะ Excuese Query ทำการ Validate Data ก่อน
     if (req.body.cartId == null || req.body.pdId == null || req.body.pdPrice == null) {
       return res.json({
         cartDtlOK: false,
         messageAddCartDtl: "CartId && ProductID  && Price  is required",
       });
     }
-    // ดูว่ามี Product เดิมอยู่่หรือไม่
     const pdResult = await database.query({
       text: `  SELECT * FROM "cartDtl" ctd WHERE ctd."cartId" = $1 AND ctd."pdId" = $2 `,
-      values: [req.body.cartId, req.body.pdId], //ค่า Parameter ที่ส่งมา
+      values: [req.body.cartId, req.body.pdId],
     });    
-    if (pdResult.rowCount == 0) { // ถ้าไม่มีให้ INSERT
+    if (pdResult.rowCount == 0) {
       try {
         const result = await database.query({
           text: ` INSERT INTO "cartDtl" ("cartId", "pdId", "qty","price")
@@ -125,9 +112,8 @@ export async function postCartDtl(req, res) {
           messageAddCartDtl: "INSERT DETAIL ERROR",
         });
       }
-    } else { // ถ้ามีแล้วให้ UPDATE
+    } else {
       try {
-        // อัปเดต qty และ price ใหม่ (ใช้ราคาล่าสุดจาก request)
         const result = await database.query({
           text: ` UPDATE "cartDtl" SET "qty" = $1, "price" = $2
                             WHERE "cartId" = $3
@@ -152,8 +138,6 @@ export async function postCartDtl(req, res) {
 
 
 export async function sumCarts(req, res) {
-    console.log(`POST /sumCart ${req.params.id} is Requested!!.`)
-    
     try {
         const result = await database.query({
             text: `SELECT SUM(qty) AS qty, SUM(qty*price) AS money
@@ -162,21 +146,17 @@ export async function sumCarts(req, res) {
             values: [req.params.id]
         });
         
-        console.log(result.rows[0]);
         return res.json({
             id: req.params.id,
             qty: result.rows[0].qty,
             money: result.rows[0].money
         });
     } catch (err) {
-        console.error('Error in sumCarts:', err);
         return res.json({ error: err.message });
     }
 }
 
 export async function getCarts(req, res) {
-    console.log(`GET /getCart ${req.params.id} is Requested!!.`)
-    
     try {
         const result = await database.query({
           text:`  SELECT ct.*, SUM(ctd.qty) AS sqty,SUM(ctd.price*ctd.qty) AS sprice
@@ -186,8 +166,6 @@ export async function getCarts(req, res) {
           values:[req.params.id]
         });
         
-        console.log(`id=${req.params.id}`);
-        console.log(result.rows[0]);
         return res.json(result.rows);
         
     } catch (err) {
@@ -199,8 +177,6 @@ export async function getCarts(req, res) {
 }
 
 export async function getCartDtl(req, res) {
-    console.log(`GET CartDetail ${req.params.id} is Requested!!.`)
-    
     try {
         const result = await database.query({
             text: `SELECT ROW_NUMBER() OVER (ORDER BY ctd."pdId") AS row_number,
@@ -213,8 +189,6 @@ export async function getCartDtl(req, res) {
             values: [req.params.id]
         });
         
-        console.log(`id=${req.params.id}`);
-        console.log(result.rows[0]);
         return res.json(result.rows);
         
     } catch (err) {
@@ -226,8 +200,6 @@ export async function getCartDtl(req, res) {
 }
 
 export async function getCartByCus(req, res) {
-    console.log(`POST CartByCus ${req.body.id} is Requested!!.`)
-    
     try {
         const result = await database.query({
             text: `SELECT ROW_NUMBER() OVER (ORDER BY ct."cartId" DESC) AS row_number,
@@ -240,8 +212,6 @@ export async function getCartByCus(req, res) {
             values: [req.body.id]
         });
         
-        console.log(`id=${req.body.id}`);
-        console.log(result.rows[0]);
         return res.json(result.rows);
         
     } catch (err) {
@@ -253,13 +223,10 @@ export async function getCartByCus(req, res) {
 }
 
 export async function deleteCartDtl(req, res) {
-    console.log(`DELETE /carts/deleteitem/${req.params.cartId}/${req.params.pdId} is Requested!!.`)
-    
     try {
         const cartId = req.params.cartId;
         const pdId = req.params.pdId;
 
-        // ตรวจสอบว่ามี cartId และ pdId หรือไม่
         if (!cartId || !pdId) {
             return res.status(400).json({
                 success: false,
@@ -267,7 +234,6 @@ export async function deleteCartDtl(req, res) {
             });
         }
 
-        // ลบรายการสินค้าจาก cartDtl
         const result = await database.query({
             text: `DELETE FROM "cartDtl" WHERE "cartId" = $1 AND "pdId" = $2`,
             values: [cartId, pdId]
@@ -280,14 +246,12 @@ export async function deleteCartDtl(req, res) {
             });
         }
 
-        console.log(`Cart item ${pdId} from cart ${cartId} deleted successfully`);
         return res.json({
             success: true,
             message: "Cart item deleted successfully"
         });
 
     } catch (err) {
-        console.error('Error deleting cart item:', err);
         return res.status(500).json({
             success: false,
             error: err.message
@@ -296,10 +260,7 @@ export async function deleteCartDtl(req, res) {
 }
 
 export async function deleteCart(req, res) {
-    console.log(`DELETE /carts/delete/${req.params.id} is Requested!!.`)
-    
     try {
-        // ตรวจสอบว่ามี cartId หรือไม่
         if (!req.params.id) {
             return res.status(400).json({
                 success: false,
@@ -307,14 +268,11 @@ export async function deleteCart(req, res) {
             });
         }
 
-        // เริ่ม transaction โดยลบ cartDtl ก่อน แล้วค่อยลบ carts
-        // ลบรายละเอียดตะกร้าก่อน
         await database.query({
             text: `DELETE FROM "cartDtl" WHERE "cartId" = $1`,
             values: [req.params.id]
         });
 
-        // ลบตะกร้าหลัก
         const result = await database.query({
             text: `DELETE FROM carts WHERE "cartId" = $1`,
             values: [req.params.id]
@@ -327,14 +285,12 @@ export async function deleteCart(req, res) {
             });
         }
 
-        console.log(`Cart ${req.params.id} deleted successfully`);
         return res.json({
             success: true,
             message: "Cart deleted successfully"
         });
 
     } catch (err) {
-        console.error('Error deleting cart:', err);
         return res.status(500).json({
             success: false,
             error: err.message
@@ -342,10 +298,7 @@ export async function deleteCart(req, res) {
     }
 }
 
-// ยืนยันสั่งซื้อ - คัดลอกข้อมูลจาก cart ไป order และลบ cart
 export async function confirmOrder(req, res) {
-    console.log(`POST /carts/confirm/${req.params.id} is Requested!!.`)
-    
     try {
         const cartId = req.params.id;
         
@@ -356,7 +309,6 @@ export async function confirmOrder(req, res) {
             });
         }
 
-        // ตรวจสอบว่ามี cart หรือไม่
         const cartResult = await database.query({
             text: `SELECT * FROM carts WHERE "cartId" = $1`,
             values: [cartId]
@@ -371,7 +323,6 @@ export async function confirmOrder(req, res) {
 
         const cart = cartResult.rows[0];
 
-        // ตรวจสอบว่ามีสินค้าในตะกร้าหรือไม่
         const cartDtlResult = await database.query({
             text: `SELECT * FROM "cartDtl" WHERE "cartId" = $1`,
             values: [cartId]
@@ -384,7 +335,6 @@ export async function confirmOrder(req, res) {
             });
         }
 
-        // สร้าง orderId ใหม่
         const now = new Date();
         const year = now.getFullYear();
         const month = String(now.getMonth() + 1).padStart(2, "0");
@@ -404,7 +354,6 @@ export async function confirmOrder(req, res) {
             });
         } while (existsResult.rows[0].exists);
 
-        // คำนวณ total
         const totalResult = await database.query({
             text: `SELECT SUM(qty) AS totalQty, SUM(qty*price) AS totalPrice
                    FROM "cartDtl"
@@ -415,18 +364,15 @@ export async function confirmOrder(req, res) {
         const totalQty = totalResult.rows[0].totalQty || 0;
         const totalPrice = totalResult.rows[0].totalPrice || 0;
 
-        // เริ่ม transaction - สร้าง order และ orderDtl
         await database.query('BEGIN');
 
         try {
-            // สร้าง order
             await database.query({
                 text: `INSERT INTO orders ("orderId", "cusId", "orderDate", "totalQty", "totalPrice", "orderStatus")
                        VALUES ($1, $2, $3, $4, $5, $6)`,
                 values: [orderId, cart.cusId, now, totalQty, totalPrice, 'pending']
             });
 
-            // คัดลอก cartDtl ไป orderDtl
             for (const item of cartDtlResult.rows) {
                 await database.query({
                     text: `INSERT INTO "orderDtl" ("orderId", "pdId", "qty", "price")
@@ -435,7 +381,6 @@ export async function confirmOrder(req, res) {
                 });
             }
 
-            // ลบ cartDtl และ cart
             await database.query({
                 text: `DELETE FROM "cartDtl" WHERE "cartId" = $1`,
                 values: [cartId]
@@ -448,7 +393,6 @@ export async function confirmOrder(req, res) {
 
             await database.query('COMMIT');
 
-            console.log(`Order ${orderId} created successfully from cart ${cartId}`);
             return res.json({
                 success: true,
                 message: "Order confirmed successfully",
@@ -461,7 +405,6 @@ export async function confirmOrder(req, res) {
         }
 
     } catch (err) {
-        console.error('Error confirming order:', err);
         return res.status(500).json({
             success: false,
             error: err.message
@@ -469,10 +412,7 @@ export async function confirmOrder(req, res) {
     }
 }
 
-// ดึงรายการ orders ของลูกค้า
 export async function getOrders(req, res) {
-    console.log(`GET /orders/${req.params.cusId} is Requested!!.`)
-    
     try {
         const cusId = req.params.cusId;
         
@@ -482,7 +422,6 @@ export async function getOrders(req, res) {
             });
         }
 
-        // คำนวณ totalQty และ totalPrice จาก orderDtl เพื่อให้แน่ใจว่าจะได้ค่าที่ถูกต้อง
         const result = await database.query({
             text: `SELECT o.*, 
                           COALESCE(SUM(od.qty), 0) AS "totalQty",
@@ -499,17 +438,13 @@ export async function getOrders(req, res) {
         return res.json(result.rows);
 
     } catch (err) {
-        console.error('Error getting orders:', err);
         return res.status(500).json({
             error: err.message
         });
     }
 }
 
-// ดึงรายละเอียด order
 export async function getOrderDtl(req, res) {
-    console.log(`GET /orders/detail/${req.params.id} is Requested!!.`)
-    
     try {
         const orderId = req.params.id;
         
@@ -533,17 +468,13 @@ export async function getOrderDtl(req, res) {
         return res.json(result.rows);
 
     } catch (err) {
-        console.error('Error getting order detail:', err);
         return res.status(500).json({
             error: err.message
         });
     }
 }
 
-// ====== Admin only functions ======
 export async function getAllOrders(req, res) {
-    console.log("GET /orders/admin is Requested!!.")
-
     const admin = ensureAdmin(req, res);
     if (!admin) {
         return;
@@ -563,7 +494,6 @@ export async function getAllOrders(req, res) {
 
         return res.json(result.rows);
     } catch (err) {
-        console.error("Error getting all orders:", err);
         return res.status(500).json({
             error: err.message
         });
@@ -571,8 +501,6 @@ export async function getAllOrders(req, res) {
 }
 
 export async function updateOrderStatus(req, res) {
-    console.log(`PUT /orders/${req.params.id}/status is Requested!!. Status = ${req.body.status}`)
-
     const admin = ensureAdmin(req, res);
     if (!admin) {
         return;
@@ -604,7 +532,6 @@ export async function updateOrderStatus(req, res) {
             message: "Order status updated successfully"
         });
     } catch (err) {
-        console.error("Error updating order status:", err);
         return res.status(500).json({
             error: err.message
         });
@@ -612,8 +539,6 @@ export async function updateOrderStatus(req, res) {
 }
 
 export async function deleteOrder(req, res) {
-    console.log(`DELETE /orders/${req.params.id} is Requested!!.`)
-
     const admin = ensureAdmin(req, res);
     if (!admin) {
         return;
@@ -653,7 +578,6 @@ export async function deleteOrder(req, res) {
         });
     } catch (err) {
         await database.query("ROLLBACK");
-        console.error("Error deleting order:", err);
         return res.status(500).json({
             error: err.message
         });

@@ -151,12 +151,6 @@
             กลับไปหน้าสินค้า
           </button>
 
-          <!-- debug info (ยังเก็บไว้ให้ดู แต่ทำเป็นตัวเล็ก ๆ) -->
-          <div class="debug-info mt-4 small text-muted">
-            <p>mem_email: {{ mem_email || 'ยังไม่โหลด' }}</p>
-            <p>cusId: {{ cusId || 'ยังไม่โหลด' }}</p>
-            <p>cartId: {{ cartId || 'ยังไม่โหลด' }}</p>
-          </div>
         </div>
       </div>
     </div>
@@ -167,31 +161,26 @@
 
 <script setup>
 import { onMounted, ref, computed } from 'vue';
-import { useRoute, useRouter } from 'vue-router' //useRoute มีไว้เพื่อ อ่าน ข้อมูล useRouter มีไว้เพื่อ สั่งการ ให้เปลี่ยนหน้า
+import { useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
 import { useCartStore } from '@/stores/cartStore';
 axios.defaults.withCredentials = true
 
-
 const route = useRoute()
 const router = useRouter()
 const cartStore = useCartStore()
-const cart=ref([])//รับข้อมูล Master
-const cartDtl=ref([]) //รับข้อมูล Detail
+const cart=ref([])
+const cartDtl=ref([])
 
+const cartId=ref(null)
+const cusId=ref(null)
 
-const cartId=ref(null) //ข้อมูลจาก Database
-const cusId=ref(null) //ข้อมูลจาก Database
-
-
-const mem_email=ref(null) //ข้อมูลจาก Cookie ที่ Login
-const isDeleting=ref(false) //สถานะการลบตะกร้า
-const deleteMessage=ref('') //ข้อความผลลัพธ์การลบ
-const isDeletingItem=ref(null) //สถานะการลบรายการสินค้า (เก็บ pdId ที่กำลังลบ)
-const isConfirming=ref(false) //สถานะการยืนยันสั่งซื้อ
-const confirmMessage=ref('') //ข้อความผลลัพธ์การยืนยัน
-
-// Computed property เพื่อตรวจสอบสิทธิ์ (normalize ค่าก่อนเปรียบเทียบ)
+const mem_email=ref(null)
+const isDeleting=ref(false)
+const deleteMessage=ref('')
+const isDeletingItem=ref(null)
+const isConfirming=ref(false)
+const confirmMessage=ref('')
 const hasPermission = computed(() => {
     if (!mem_email.value || !cusId.value) {
         return false
@@ -206,72 +195,51 @@ const hasPermission = computed(() => {
 const formattedDate=(dateStr)=> {
     const date = new Date(dateStr);
     const year = date.getFullYear();
-    const month = String(date.getMonth()+ 1).padStart(2, '0'); // เดือนเริ่มต้นที่ 0, จึงต้อง +1
+    const month = String(date.getMonth()+ 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
 }
 onMounted(async ()=>{
-    cartId.value = route.params.cart_id || route.params.cartId //อ่านค่า Cart จาก URL ที่ส่งมา (route ใช้ cart_id)
-    console.log("CartShow - cartId from route:", cartId.value)
+    cartId.value = route.params.cart_id || route.params.cartId
     
-    // เรียก getMember และ getCart พร้อมกันเพื่อความเร็ว
     await Promise.all([
-        getMember(), // ตรวจสอบผู้ใช้ -->อ่านค่าจาก Cookie
-        getCart() // อ่านข้อมูลตะกร้า Master
+        getMember(),
+        getCart()
     ]);
     
-    // ตรวจสอบอีกครั้งหลังจากโหลดข้อมูลเสร็จ
-    console.log('After loading - mem_email:', mem_email.value, 'cusId:', cusId.value, 'Match:', mem_email.value === cusId.value)
-    
-    await getCartDtl() // อ่านรายละเอียดตะกร้า Detail
+    await getCartDtl()
 })
 
 
 const getCart=async ()=>{
     if (!cartId.value) {
-        console.error('cartId is null or undefined')
         return
     }
-    console.log('Get Cart:', cartId.value)
     await axios.get(`http://localhost:3000/carts/getcart/${cartId.value}`)
         .then(res => {
             cart.value = res.data
-            console.log('Cart response:', res.data)
-            // ตรวจสอบว่ามีข้อมูลก่อนเข้าถึง array
             if (cart.value && cart.value.length > 0) {
-                cusId.value = cart.value[0].cusId // อ่านค่าว่าลูกค้าของเอกสารนี้เป็นใคร
-                console.log('cusId loaded:', cusId.value, 'type:', typeof cusId.value)
-                console.log('mem_email at this point:', mem_email.value, 'type:', typeof mem_email.value)
-            } else {
-                console.error('No cart data found - cart.value:', cart.value)
+                cusId.value = cart.value[0].cusId
             }
         })
-        .catch(err => {  
-            console.error('Error getting cart:', err); 
-        });      
+        .catch(err => {});      
 }
 const getCartDtl=async ()=>{
-    console.log('Get Cart Detail:'+cartId.value)
     await axios.get(`http://localhost:3000/carts/getcartdtl/${cartId.value}`)
         .then(res => {
             cartDtl.value = res.data
         })
-        .catch(err => {  console.error(err); });      
+        .catch(err => {});      
 }
 const getMember=async ()=>{
     await axios.get(`http://localhost:3000/members/detail`)
         .then((res)=>{
            mem_email.value=res.data.mem_email
-           console.log('mem_email loaded:', mem_email.value, 'type:', typeof mem_email.value)
-           console.log('cusId at this point:', cusId.value, 'type:', typeof cusId.value)
         })
-        .catch(err=>{
-            console.log('Error getting member:', err.message)
-        })
+        .catch(err=>{})
 }
 
 const deleteCartItem = async (pdId) => {
-    // ยืนยันก่อนลบ
     if (!confirm(`คุณต้องการลบสินค้ารายการนี้ออกจากตะกร้าหรือไม่?`)) {
         return
     }
@@ -287,13 +255,11 @@ const deleteCartItem = async (pdId) => {
         const response = await axios.delete(`http://localhost:3000/carts/deleteitem/${cartId.value}/${pdId}`)
         
         if (response.data.success) {
-            // Refresh ข้อมูลตะกร้าและรายละเอียด
             await Promise.all([
                 getCart(),
                 getCartDtl()
             ])
             
-            // อัพเดต cart store
             const sumResponse = await axios.get(`http://localhost:3000/carts/sumcart/${cartId.value}`)
             if (sumResponse.data && sumResponse.data.qty) {
                 cartStore.setDisplayQty(sumResponse.data.qty)
@@ -301,14 +267,10 @@ const deleteCartItem = async (pdId) => {
                 cartStore.setDisplayQty(0)
             }
             
-            // Dispatch event เพื่อให้ CartInfo refresh แบบ real-time
             window.dispatchEvent(new Event('cart-item-deleted'))
             
-            // ตรวจสอบว่ายังมีสินค้าในตะกร้าหรือไม่ (ตรวจสอบหลังจาก refresh แล้ว)
-            // ใช้ setTimeout เพื่อให้แน่ใจว่า cartDtl.value ได้อัพเดตแล้ว
             setTimeout(() => {
                 if (!cartDtl.value || cartDtl.value.length === 0) {
-                    // ถ้าไม่มีสินค้าแล้ว ให้ redirect ไปหน้าสินค้า
                     router.push('/product')
                     window.dispatchEvent(new Event('cart-deleted'))
                 }
@@ -317,7 +279,6 @@ const deleteCartItem = async (pdId) => {
             throw new Error(response.data.message || 'ลบรายการสินค้าไม่สำเร็จ')
         }
     } catch (err) {
-        console.error('Error deleting cart item:', err)
         const errorMsg = err.response?.data?.message || err.message || 'ลบรายการสินค้าไม่สำเร็จ'
         alert(errorMsg)
     } finally {
@@ -326,7 +287,6 @@ const deleteCartItem = async (pdId) => {
 }
 
 const deleteCart = async () => {
-    // ยืนยันก่อนลบ
     if (!confirm('คุณต้องการลบตะกร้าสินค้านี้ทั้งหมดหรือไม่?')) {
         return
     }
@@ -345,26 +305,18 @@ const deleteCart = async () => {
         if (response.data.success) {
             deleteMessage.value = 'ลบตะกร้าสินค้าสำเร็จ'
             
-            // Reset cart store
             cartStore.setDisplayQty(0)
             cartStore.setId(null)
             
-            // Trigger refresh โดยการ navigate ไปหน้าอื่นก่อน แล้วค่อยกลับมา
-            // หรือใช้ window.location.reload() แต่จะ reload ทั้งหน้า
-            // วิธีที่ดีกว่าคือใช้ router.push แล้วให้ CartInfo refresh เอง
-            
             alert('ลบตะกร้าสินค้าสำเร็จ')
             
-            // ใช้ router.push แล้ว trigger refresh โดยการ force reload component
             router.push('/product').then(() => {
-                // Trigger window event เพื่อให้ CartInfo refresh
                 window.dispatchEvent(new Event('cart-deleted'))
             })
         } else {
             throw new Error(response.data.message || 'ลบตะกร้าไม่สำเร็จ')
         }
     } catch (err) {
-        console.error('Error deleting cart:', err)
         const errorMsg = err.response?.data?.message || err.message || 'ลบตะกร้าไม่สำเร็จ'
         deleteMessage.value = errorMsg
         alert(errorMsg)
@@ -374,7 +326,6 @@ const deleteCart = async () => {
 }
 
 const confirmOrder = async () => {
-    // ยืนยันก่อนสั่งซื้อ
     if (!confirm('คุณต้องการยืนยันสั่งซื้อสินค้านี้หรือไม่?')) {
         return
     }
@@ -393,22 +344,18 @@ const confirmOrder = async () => {
         if (response.data.success) {
             confirmMessage.value = 'ยืนยันสั่งซื้อสำเร็จ'
             
-            // Reset cart store
             cartStore.setDisplayQty(0)
             cartStore.setId(null)
             
             alert(`ยืนยันสั่งซื้อสำเร็จ! รหัสคำสั่งซื้อ: ${response.data.orderId}`)
             
-            // ไปที่หน้าดูรายการ order
             router.push('/orders').then(() => {
-                // Trigger window event เพื่อให้ CartInfo refresh
                 window.dispatchEvent(new Event('cart-deleted'))
             })
         } else {
             throw new Error(response.data.message || 'ยืนยันสั่งซื้อไม่สำเร็จ')
         }
     } catch (err) {
-        console.error('Error confirming order:', err)
         const errorMsg = err.response?.data?.error || err.response?.data?.message || err.message || 'ยืนยันสั่งซื้อไม่สำเร็จ'
         confirmMessage.value = errorMsg
         alert(errorMsg)
