@@ -38,6 +38,7 @@
 <script setup>
 import { onMounted, ref } from 'vue';
 import axios from 'axios';
+import API_BASE_URL from '@/config/api';
 axios.defaults.withCredentials = true
 
 
@@ -53,15 +54,15 @@ const formattedDate=(dateStr)=> {
     return `${year}-${month}-${day}`;
 }
 onMounted(async ()=>{
-    await getMember() 
+    await getMember()
     await getCartList() 
 })
 
 
 const getCartList=async ()=>{
     let customer ={ id:mem_email.value} 
-    console.log(customer)
-    await axios.post(`http://localhost:3000/carts/getcartbycus`,customer) 
+
+    await axios.post(`${API_BASE_URL}/carts/getcartbycus`,customer) 
         .then(res => {
             carts.value = res.data
         })
@@ -70,7 +71,7 @@ const getCartList=async ()=>{
 
 
 const getMember=async ()=>{
-    await axios.get(`http://localhost:3000/members/detail`)
+    await axios.get(`${API_BASE_URL}/members/detail`)
         .then((res)=>{
             mem_email.value=res.data.mem_email
         })

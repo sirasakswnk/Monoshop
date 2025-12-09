@@ -76,6 +76,7 @@ import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
 import axios from 'axios';
+import API_BASE_URL from '@/config/api';
 
 axios.defaults.withCredentials = true;
 
@@ -99,7 +100,7 @@ onMounted(async () => {
 
 const getMember = async () => {
   try {
-    const response = await axios.get(`http://localhost:3000/members/detail`);
+    const response = await axios.get(`${API_BASE_URL}/members/detail`);
     login.value = response.data.login;
   } catch (err) {
     console.log("Not logged in yet:", err.message);
@@ -121,7 +122,7 @@ const handleSubmit = async () => {
   };
   
   try {
-    const response = await axios.post(`http://localhost:3000/members/login`, members);
+    const response = await axios.post(`${API_BASE_URL}/members/login`, members);
     
     login.value = response.data.login;
     message.value = response.data.message;

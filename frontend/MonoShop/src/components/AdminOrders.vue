@@ -151,6 +151,7 @@
 <script setup>
 import { onMounted, ref } from "vue";
 import axios from "axios";
+import API_BASE_URL from '@/config/api';
 
 axios.defaults.withCredentials = true;
 
@@ -193,7 +194,7 @@ const getStatusClass = (status) => {
 
 const getMember = async () => {
     try {
-        const response = await axios.get("http://localhost:3000/members/detail");
+        const response = await axios.get(`${API_BASE_URL}/members/detail`);
         if (response.data.login && response.data.role === "admin") {
             isAdmin.value = true;
         } else {
@@ -213,7 +214,7 @@ const getOrders = async () => {
         return;
     }
     try {
-        const response = await axios.get("http://localhost:3000/orders/admin");
+        const response = await axios.get(`${API_BASE_URL}/orders/admin`);
         orders.value = response.data;
     } catch (err) {
         console.error("Error getting admin orders:", err);
@@ -237,7 +238,7 @@ const toggleOrderDetail = async (orderId) => {
 
 const getOrderDetail = async (orderId) => {
     try {
-        const response = await axios.get(`http://localhost:3000/orders/detail/${orderId}`);
+        const response = await axios.get(`${API_BASE_URL}/orders/detail/${orderId}`);
         orderDetails.value[orderId] = response.data;
     } catch (err) {
         console.error("Error loading order detail:", err);
@@ -249,7 +250,7 @@ const updateStatus = async (orderId, status) => {
         return;
     }
     try {
-        await axios.put(`http://localhost:3000/orders/${orderId}/status`, { status });
+        await axios.put(`${API_BASE_URL}/orders/${orderId}/status`, { status });
         await getOrders();
         alert("อัปเดตสถานะสำเร็จ");
     } catch (err) {
@@ -263,7 +264,7 @@ const deleteOrder = async (orderId) => {
         return;
     }
     try {
-        await axios.delete(`http://localhost:3000/orders/${orderId}`);
+        await axios.delete(`${API_BASE_URL}/orders/${orderId}`);
         await getOrders();
         alert("ลบคำสั่งซื้อสำเร็จ");
     } catch (err) {

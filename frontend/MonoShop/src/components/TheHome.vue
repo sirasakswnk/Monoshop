@@ -112,7 +112,8 @@
 import { ref, onMounted } from "vue";
 import axios from "axios";
 
-const baseURL = import.meta.env.VITE_API_BASE || "http://localhost:3000";
+import API_BASE_URL from '@/config/api';
+const baseURL = API_BASE_URL;
 const products = ref([]);
 const loading = ref(true);
 

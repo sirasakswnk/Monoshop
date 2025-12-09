@@ -16,7 +16,7 @@
         <div class="product-card">
           <div class="image-container">
             <img 
-              :src="`http://localhost:3000/img_pd/${pd.product_id}.jpg`" 
+              :src="`${API_BASE_URL}/img_pd/${pd.product_id}.jpg`" 
               class="product-image" 
               :alt="pd.productname"
               @error="handleImageError">
@@ -50,6 +50,7 @@
   import { onMounted, ref, watch } from 'vue';
   import { useRoute } from 'vue-router';
   import axios from 'axios';
+  import API_BASE_URL from '@/config/api';
   axios.defaults.withCredentials = true
 
   const products = ref([]);
@@ -70,8 +71,8 @@
     try {
       const keyword = searchTerm.value.trim();
       const url = keyword 
-        ? `http://localhost:3000/products/search/${encodeURIComponent(keyword)}`
-        : `http://localhost:3000/products`;
+        ? `${API_BASE_URL}/products/search/${encodeURIComponent(keyword)}`
+        : `${API_BASE_URL}/products`;
       const res = await axios.get(url);
       products.value = res.data;
     } catch (err) {

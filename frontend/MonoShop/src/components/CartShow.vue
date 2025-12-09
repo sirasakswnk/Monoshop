@@ -176,6 +176,7 @@ import { onMounted, ref, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
 import { useCartStore } from '@/stores/cartStore';
+import API_BASE_URL from '@/config/api';
 axios.defaults.withCredentials = true
 
 const route = useRoute()
@@ -228,7 +229,7 @@ const getCart=async ()=>{
     if (!cartId.value) {
         return
     }
-    await axios.get(`http://localhost:3000/carts/getcart/${cartId.value}`)
+    await axios.get(`${API_BASE_URL}/carts/getcart/${cartId.value}`)
         .then(res => {
             cart.value = res.data
             if (cart.value && cart.value.length > 0) {
@@ -238,14 +239,14 @@ const getCart=async ()=>{
         .catch(err => {});      
 }
 const getCartDtl=async ()=>{
-    await axios.get(`http://localhost:3000/carts/getcartdtl/${cartId.value}`)
+    await axios.get(`${API_BASE_URL}/carts/getcartdtl/${cartId.value}`)
         .then(res => {
             cartDtl.value = res.data
         })
         .catch(err => {});      
 }
 const getMember=async ()=>{
-    await axios.get(`http://localhost:3000/members/detail`)
+    await axios.get(`${API_BASE_URL}/members/detail`)
         .then((res)=>{
            mem_email.value=res.data.mem_email
         })
@@ -265,7 +266,7 @@ const deleteCartItem = async (pdId) => {
     isDeletingItem.value = pdId
 
     try {
-        const response = await axios.delete(`http://localhost:3000/carts/deleteitem/${cartId.value}/${pdId}`)
+        const response = await axios.delete(`${API_BASE_URL}/carts/deleteitem/${cartId.value}/${pdId}`)
         
         if (response.data.success) {
             await Promise.all([
@@ -273,7 +274,7 @@ const deleteCartItem = async (pdId) => {
                 getCartDtl()
             ])
             
-            const sumResponse = await axios.get(`http://localhost:3000/carts/sumcart/${cartId.value}`)
+            const sumResponse = await axios.get(`${API_BASE_URL}/carts/sumcart/${cartId.value}`)
             if (sumResponse.data && sumResponse.data.qty) {
                 cartStore.setDisplayQty(sumResponse.data.qty)
             } else {
@@ -303,7 +304,7 @@ const updateItemQty = async (pdId, newQty) => {
     if (!cartId.value || !pdId || newQty < 1) return
     isUpdatingItem.value = pdId
     try {
-        const response = await axios.put(`http://localhost:3000/carts/updateqty/${cartId.value}/${pdId}`, { qty: newQty })
+        const response = await axios.put(`${API_BASE_URL}/carts/updateqty/${cartId.value}/${pdId}`, { qty: newQty })
         
         if (response.data?.success) {
             await Promise.all([
@@ -311,7 +312,7 @@ const updateItemQty = async (pdId, newQty) => {
                 getCartDtl()
             ])
             
-            const sumResponse = await axios.get(`http://localhost:3000/carts/sumcart/${cartId.value}`)
+            const sumResponse = await axios.get(`${API_BASE_URL}/carts/sumcart/${cartId.value}`)
             if (sumResponse.data && sumResponse.data.qty) {
                 cartStore.setDisplayQty(sumResponse.data.qty)
             } else {
@@ -353,7 +354,7 @@ const deleteCart = async () => {
     deleteMessage.value = ''
 
     try {
-        const response = await axios.delete(`http://localhost:3000/carts/delete/${cartId.value}`)
+        const response = await axios.delete(`${API_BASE_URL}/carts/delete/${cartId.value}`)
         
         if (response.data.success) {
             deleteMessage.value = 'ลบตะกร้าสินค้าสำเร็จ'
@@ -392,7 +393,7 @@ const confirmOrder = async () => {
     confirmMessage.value = ''
 
     try {
-        const response = await axios.post(`http://localhost:3000/carts/confirm/${cartId.value}`)
+        const response = await axios.post(`${API_BASE_URL}/carts/confirm/${cartId.value}`)
         
         if (response.data.success) {
             confirmMessage.value = 'ยืนยันสั่งซื้อสำเร็จ'

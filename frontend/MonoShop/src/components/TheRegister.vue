@@ -134,6 +134,7 @@ import { ref } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
+import API_BASE_URL from '@/config/api';
 
 const router = useRouter();
 
@@ -207,7 +208,7 @@ const handleSubmit = async () => {
     };
 
     try {
-        const response = await axios.post(`http://localhost:3000/members`, members);
+        const response = await axios.post(`${API_BASE_URL}/members`, members);
         regist.value = response.data.register;
         message.value = response.data.message || 'ลงทะเบียนสำเร็จ!';
         

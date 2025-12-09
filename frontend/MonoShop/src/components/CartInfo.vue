@@ -13,6 +13,7 @@
 <script setup>
     import { onMounted, ref, watch, onUnmounted, computed } from 'vue';
     import axios from 'axios';
+    import API_BASE_URL from '@/config/api';
     axios.defaults.withCredentials = true
 
     import { useRouter, useRoute } from "vue-router";
@@ -82,7 +83,7 @@
     const chkCart=async ()=>{
         let members={ mem_email:mem_email.value }
         try {
-                const response = await axios.post(`http://localhost:3000/carts/chkcart`,members)
+                const response = await axios.post(`${API_BASE_URL}/carts/chkcart`,members)
                 
                 if (response.data.cartExists && response.data.cartId) {
                     cartId.value = response.data.cartId
@@ -100,7 +101,7 @@
     }
     
     const getMember=async ()=>{
-        await axios.get(`http://localhost:3000/members/detail`)
+        await axios.get(`${API_BASE_URL}/members/detail`)
             .then((res)=>{
                 mem_email.value=res.data.mem_email
             })
@@ -108,7 +109,7 @@
     }
     
     const sumCart=async(cid)=>{
-        await axios.get(`http://localhost:3000/carts/sumcart/${cid}`)
+        await axios.get(`${API_BASE_URL}/carts/sumcart/${cid}`)
         .then(res => {
             cartId .value = res.data.id
             const sumQty = Number(res.data.qty) || 0

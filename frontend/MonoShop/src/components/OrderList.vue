@@ -99,6 +99,7 @@
 <script setup>
 import { onMounted, ref } from 'vue';
 import axios from 'axios';
+import API_BASE_URL from '@/config/api';
 axios.defaults.withCredentials = true
 
 const orders = ref([])
@@ -155,7 +156,7 @@ const toggleOrderDetail = async (orderId) => {
 
 const getOrderDetail = async (orderId) => {
     try {
-        const response = await axios.get(`http://localhost:3000/orders/detail/${orderId}`);
+        const response = await axios.get(`${API_BASE_URL}/orders/detail/${orderId}`);
         orderDetails.value[orderId] = response.data;
     } catch (err) {
         console.error('Error getting order detail:', err);
@@ -169,7 +170,7 @@ const getOrders = async () => {
     }
     
     try {
-        const response = await axios.get(`http://localhost:3000/orders/${mem_email.value}`);
+        const response = await axios.get(`${API_BASE_URL}/orders/${mem_email.value}`);
         orders.value = response.data;
     } catch (err) {
         console.error('Error getting orders:', err);
@@ -180,7 +181,7 @@ const getOrders = async () => {
 
 const getMember = async () => {
     try {
-        const response = await axios.get(`http://localhost:3000/members/detail`);
+        const response = await axios.get(`${API_BASE_URL}/members/detail`);
         mem_email.value = response.data.mem_email;
     } catch (err) {
         console.error('Error getting member:', err.message);

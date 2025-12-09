@@ -15,11 +15,11 @@
                     <div class="left-column">
                         <div class="image-preview">
                             <img v-if="imgOK" 
-                                 :src="`http://localhost:3000/img_mem/${mem_email}.jpg?timestamp=${imageTimestamp}`" 
+                                 :src="`${API_BASE_URL}/img_mem/${mem_email}.jpg?timestamp=${imageTimestamp}`" 
                                  :alt="mem_email"
                                  class="profile-image">
                             <img v-else 
-                                 src="http://localhost:3000/img_mem/default.jpg" 
+                                 :src="`${API_BASE_URL}/img_mem/default.jpg`" 
                                  :alt="mem_email"
                                  class="profile-image">
                         </div>
@@ -109,6 +109,7 @@
 import { onMounted, ref, reactive, computed } from 'vue';
 import axios from 'axios';
 import { useAuthStore } from '@/stores/authStore';
+import API_BASE_URL from '@/config/api';
 
 axios.defaults.withCredentials = true;
 
@@ -146,7 +147,7 @@ onMounted(async () => {
 
 const getMember = async () => {
     try {
-        const res = await axios.get(`http://localhost:3000/members/detail`);
+        const res = await axios.get(`${API_BASE_URL}/members/detail`);
         member.value = res.data;
         mem_email.value = member.value.mem_email;
         mem_name.value = member.value.mem_name;
@@ -159,7 +160,7 @@ const getMember = async () => {
 
 const chkImage = async () => {
     const image = new Image();
-    image.src = `http://localhost:3000/img_mem/${mem_email.value}.jpg`;
+    image.src = `${API_BASE_URL}/img_mem/${mem_email.value}.jpg`;
     image.onload = () => {
         imgOK.value = true;
     };
@@ -183,7 +184,7 @@ const uploadFile = async () => {
     formData.append("file", file.value);
     
     try {
-        const response = await axios.post("http://localhost:3000/members/uploadimg", formData, {
+        const response = await axios.post(`${API_BASE_URL}/members/uploadimg`, formData, {
             headers: { "Content-Type": "multipart/form-data" }
         });
         fileMessage.value = response.data.message;
@@ -233,7 +234,7 @@ const saveChanges = async () => {
             updateData.role = editForm.role;
         }
 
-        const response = await axios.put(`http://localhost:3000/members/update`, updateData);
+        const response = await axios.put(`${API_BASE_URL}/members/update`, updateData);
 
         mem_email.value = editForm.mem_email;
         mem_name.value = editForm.mem_name;

@@ -16,7 +16,7 @@
                     <div class="image-container">
                         <div class="product-badge" v-if="pd.isNew">NEW</div>
                         <img 
-                            :src="`http://localhost:3000/img_pd/${pd.product_id}.jpg`" 
+                            :src="`${API_BASE_URL}/img_pd/${pd.product_id}.jpg`" 
                             :alt="pd.productname"
                             class="product-image"
                             @error="handleImageError"
@@ -199,6 +199,7 @@
 import { onMounted, ref, computed, reactive } from 'vue';
 import { useRoute } from 'vue-router';
 import axios from 'axios';
+import API_BASE_URL from '@/config/api';
 axios.defaults.withCredentials = true;
 
 // store
@@ -241,7 +242,7 @@ onMounted(async () => {
     await checkUserRole();
     
     try {
-        const res = await axios.get(`http://localhost:3000/products/${id.value}`);
+        const res = await axios.get(`${API_BASE_URL}/products/${id.value}`);
         products.value = res.data;
     } catch (err) {
         console.error('Error loading product:', err.message);
@@ -265,7 +266,7 @@ const handleImageError = (event) => {
 // ตรวจสอบ role ของ user
 const checkUserRole = async () => {
     try {
-        const res = await axios.get(`http://localhost:3000/members/detail`);
+        const res = await axios.get(`${API_BASE_URL}/members/detail`);
         login.value = res.data.login;
         mem_email.value = res.data.mem_email;
         role.value = res.data.role;
@@ -321,7 +322,7 @@ const saveProduct = async () => {
         
         // Refresh ข้อมูลสินค้าจาก server
         try {
-            const res = await axios.get(`http://localhost:3000/products/${id.value}`);
+            const res = await axios.get(`${API_BASE_URL}/products/${id.value}`);
             products.value = res.data;
         } catch (err) {
             console.error('Error refreshing product:', err);
@@ -358,7 +359,7 @@ const chkLogin = async () => {
     isLoading.value = true;
     
     try {
-        const res = await axios.get(`http://localhost:3000/members/detail`);
+        const res = await axios.get(`${API_BASE_URL}/members/detail`);
         login.value = res.data.login;
         mem_email.value = res.data.mem_email;
         
@@ -392,7 +393,7 @@ const chkCart = async () => {
     };
     
     try {
-        const response = await axios.post(`http://localhost:3000/carts/chkcart`, members);
+        const response = await axios.post(`${API_BASE_URL}/carts/chkcart`, members);
         
         if (response.data.cartExists) {
             cartId.value = response.data.cartId;
@@ -411,7 +412,7 @@ const addCart = async () => {
     };
     
     try {
-        const response = await axios.post(`http://localhost:3000/carts/addcart`, customer);
+        const response = await axios.post(`${API_BASE_URL}/carts/addcart`, customer);
         
         backendMessage.value = response.data.messageAddCart;
         cartId.value = response.data.cartId || response.data.messageAddCart;
@@ -436,13 +437,13 @@ const addCartDtl = async () => {
         
     try {
         const response = await axios.post(
-            `http://localhost:3000/carts/addcartdtl`,
+            `${API_BASE_URL}/carts/addcartdtl`,
             cartdetail,
             { withCredentials: true }
         );
         
         // อัพเดท Store ด้วยจำนวนล่าสุดจาก backend
-        const sumResponse = await axios.get(`http://localhost:3000/carts/sumcart/${cartId.value}`);
+        const sumResponse = await axios.get(`${API_BASE_URL}/carts/sumcart/${cartId.value}`);
         const sumQty = Number(sumResponse.data?.qty) || 0;
         cartStore.setDisplayQty(sumQty);
         cartStore.setId(cartId.value);

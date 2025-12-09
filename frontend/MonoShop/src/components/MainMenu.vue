@@ -107,6 +107,7 @@ import CartInfo from "./CartInfo.vue";
 import { useAuthStore } from "@/stores/authStore";
 import { useCartStore } from "@/stores/cartStore";
 import { useRouter, useRoute } from "vue-router";
+import API_BASE_URL from "@/config/api";
 
 const authStore = useAuthStore();
 const router = useRouter();
@@ -120,14 +121,14 @@ const role = ref(null);
 const imgOK = ref(true);
 const q = ref("");
 const toggleSearch = ref(false);
-const defaultAvatarUrl = "http://localhost:3000/img_mem/default.jpg";
+const defaultAvatarUrl = `${API_BASE_URL}/img_mem/default.jpg`;
 const cartStore = useCartStore();
 const cartCount = computed(() => cartStore.displayQty || 0);
 const isAdmin = computed(() => role.value === "admin");
 
 const profileImageUrl = computed(() => {
   if (imgOK.value && mem_email.value) {
-    return `http://localhost:3000/img_mem/${mem_email.value}.jpg?timestamp=${authStore.imageTimestamp}`;
+    return `${API_BASE_URL}/img_mem/${mem_email.value}.jpg?timestamp=${authStore.imageTimestamp}`;
   }
   return defaultAvatarUrl;
 });
@@ -156,7 +157,7 @@ watch(
 
 const getMember = async () => {
   try {
-    const response = await axios.get(`http://localhost:3000/members/detail`);
+    const response = await axios.get(`${API_BASE_URL}/members/detail`);
 
     if (response.data.login) {
       member.value = response.data;
@@ -204,7 +205,7 @@ const memLogout = async () => {
   const cf = window.confirm("ต้องการออกจากระบบ?");
   if (cf) {
     try {
-      await axios.get(`http://localhost:3000/members/logout`);
+      await axios.get(`${API_BASE_URL}/members/logout`);
       clearMemberData();
       authStore.logout();
       router.push("/");
