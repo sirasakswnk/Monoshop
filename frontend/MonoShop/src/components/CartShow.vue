@@ -107,10 +107,22 @@
                   <td class="text-end price-cell">
                     {{ ctd.price.toLocaleString() }}
                   </td>
-                  <td class="text-center">
-                    <span class="quantity-pill">
-                      {{ ctd.qty }}
-                    </span>
+                  <td class="text-center qty-cell">
+                    <div class="qty-selector">
+                      <button
+                        type="button"
+                        class="btn-qty"
+                        @click="decrementItem(ctd)"
+                        :disabled="ctd.qty <= 1 || isUpdatingItem === ctd.pdId"
+                      >-</button>
+                      <span class="qty-value">{{ ctd.qty }}</span>
+                      <button
+                        type="button"
+                        class="btn-qty"
+                        @click="incrementItem(ctd)"
+                        :disabled="isUpdatingItem === ctd.pdId"
+                      >+</button>
+                    </div>
                   </td>
                   <td class="text-end price-cell">
                     {{ ((ctd.price * ctd.qty) ?? 0).toLocaleString() }}
@@ -179,6 +191,7 @@ const mem_email=ref(null)
 const isDeleting=ref(false)
 const deleteMessage=ref('')
 const isDeletingItem=ref(null)
+const isUpdatingItem=ref(null)
 const isConfirming=ref(false)
 const confirmMessage=ref('')
 const hasPermission = computed(() => {
@@ -284,6 +297,46 @@ const deleteCartItem = async (pdId) => {
     } finally {
         isDeletingItem.value = null
     }
+}
+
+const updateItemQty = async (pdId, newQty) => {
+    if (!cartId.value || !pdId || newQty < 1) return
+    isUpdatingItem.value = pdId
+    try {
+        const response = await axios.put(`http://localhost:3000/carts/updateqty/${cartId.value}/${pdId}`, { qty: newQty })
+        
+        if (response.data?.success) {
+            await Promise.all([
+                getCart(),
+                getCartDtl()
+            ])
+            
+            const sumResponse = await axios.get(`http://localhost:3000/carts/sumcart/${cartId.value}`)
+            if (sumResponse.data && sumResponse.data.qty) {
+                cartStore.setDisplayQty(sumResponse.data.qty)
+            } else {
+                cartStore.setDisplayQty(0)
+            }
+            
+            window.dispatchEvent(new Event('cart-item-deleted'))
+        } else {
+            throw new Error(response.data?.message || 'อัปเดตจำนวนไม่สำเร็จ')
+        }
+    } catch (err) {
+        const errorMsg = err.response?.data?.message || err.message || 'อัปเดตจำนวนไม่สำเร็จ'
+        alert(errorMsg)
+    } finally {
+        isUpdatingItem.value = null
+    }
+}
+
+const incrementItem = (ctd) => {
+    updateItemQty(ctd.pdId, ctd.qty + 1)
+}
+
+const decrementItem = (ctd) => {
+    if (ctd.qty <= 1) return
+    updateItemQty(ctd.pdId, ctd.qty - 1)
 }
 
 const deleteCart = async () => {
@@ -531,6 +584,50 @@ const confirmOrder = async () => {
   color: #4f46e5;
   font-weight: 600;
   font-size: 0.9rem;
+}
+
+.qty-selector {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.6rem;
+  border: 2px solid #d9d1f2;
+  border-radius: 10px;
+  background: #f7f2ff;
+}
+
+.btn-qty {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: none;
+  background: linear-gradient(135deg, #6f42c1 0%, #5a32a3 100%);
+  color: #f8f5ff;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-qty:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-qty:not(:disabled):hover {
+  background: linear-gradient(135deg, #7b55cf 0%, #6a3cb5 100%);
+  transform: translateY(-1px);
+}
+
+.qty-value {
+  min-width: 28px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 1rem;
+  color: #3a1f6e;
 }
 
 /* ไอคอนลบ */

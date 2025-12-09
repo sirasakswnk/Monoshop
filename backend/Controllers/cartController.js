@@ -94,16 +94,20 @@ export async function postCartDtl(req, res) {
         messageAddCartDtl: "CartId && ProductID  && Price  is required",
       });
     }
+
+    const qty = Number(req.body.qty) > 0 ? Number(req.body.qty) : 1;
+
     const pdResult = await database.query({
       text: `  SELECT * FROM "cartDtl" ctd WHERE ctd."cartId" = $1 AND ctd."pdId" = $2 `,
       values: [req.body.cartId, req.body.pdId],
     });    
+
     if (pdResult.rowCount == 0) {
       try {
-        const result = await database.query({
+        await database.query({
           text: ` INSERT INTO "cartDtl" ("cartId", "pdId", "qty","price")
                             VALUES ($1,$2,$3,$4) `,
-          values: [req.body.cartId, req.body.pdId, 1, req.body.pdPrice],
+          values: [req.body.cartId, req.body.pdId, qty, req.body.pdPrice],
         });
         return res.json({ cartDtlOK: true, messageAddCart: req.body.cartId });
       } catch (err) {
@@ -114,11 +118,11 @@ export async function postCartDtl(req, res) {
       }
     } else {
       try {
-        const result = await database.query({
+        await database.query({
           text: ` UPDATE "cartDtl" SET "qty" = $1, "price" = $2
                             WHERE "cartId" = $3
                             AND "pdId" = $4 `,
-          values: [pdResult.rows[0].qty + 1, req.body.pdPrice, req.body.cartId, req.body.pdId],
+          values: [pdResult.rows[0].qty + qty, req.body.pdPrice, req.body.cartId, req.body.pdId],
         });
         return res.json({ cartDtlOK: true, messageAddCart: req.body.cartId });
       } catch (err) {
@@ -132,6 +136,43 @@ export async function postCartDtl(req, res) {
     return res.json({
       cartDtlOK: false,
       messageAddCartDtl: "INSERT DETAIL ERROR",
+    });
+  }
+}
+
+export async function updateCartItemQty(req, res) {
+  try {
+    const cartId = req.params.cartId;
+    const pdId = req.params.pdId;
+    const qty = Number(req.body.qty);
+
+    if (!cartId || !pdId || !qty || qty < 1) {
+      return res.status(400).json({
+        success: false,
+        message: "Cart ID, Product ID and qty>=1 are required"
+      });
+    }
+
+    const result = await database.query({
+      text: `UPDATE "cartDtl" SET qty = $1 WHERE "cartId" = $2 AND "pdId" = $3`,
+      values: [qty, cartId, pdId]
+    });
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Cart item not found"
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: "Cart item quantity updated"
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      error: err.message
     });
   }
 }

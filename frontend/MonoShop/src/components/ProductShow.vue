@@ -88,6 +88,11 @@
 
                             <!-- Action Buttons -->
                             <div class="action-buttons">
+                                <div class="qty-selector">
+                                    <button type="button" class="btn-qty" @click="decrementQty" :disabled="isLoading || qtyToAdd <= 1">-</button>
+                                    <span class="qty-value">{{ qtyToAdd }}</span>
+                                    <button type="button" class="btn-qty" @click="incrementQty" :disabled="isLoading">+</button>
+                                </div>
                                 <button 
                                     class="btn btn-add-cart" 
                                     @click="chkLogin()" 
@@ -209,6 +214,7 @@ const role = ref(null);
 const cartId = ref(null);
 const backendMessage = ref(null);
 const isLoading = ref(false);
+const qtyToAdd = ref(1);
 const isEditing = ref(false);
 const isSaving = ref(false);
 const message = ref('');
@@ -243,7 +249,7 @@ onMounted(async () => {
     }
 });
 
-
+// Helper method สำหรับ format ราคา
 const formatPrice = (price) => {
     return new Intl.NumberFormat('th-TH', {
         minimumFractionDigits: 2,
@@ -251,11 +257,12 @@ const formatPrice = (price) => {
     }).format(price);
 };
 
-
+// Helper method สำหรับจัดการ image error
 const handleImageError = (event) => {
     event.target.src = 'https://via.placeholder.com/400x400?text=No+Image';
 };
 
+// ตรวจสอบ role ของ user
 const checkUserRole = async () => {
     try {
         const res = await axios.get(`http://localhost:3000/members/detail`);
@@ -268,7 +275,7 @@ const checkUserRole = async () => {
     }
 };
 
-
+// เริ่มแก้ไข
 const startEdit = (pd) => {
     if (!isAdmin.value) {
         alert('คุณไม่มีสิทธิ์แก้ไขสินค้า');
@@ -284,11 +291,13 @@ const startEdit = (pd) => {
     message.value = '';
 };
 
+// ยกเลิกการแก้ไข
 const cancelEdit = () => {
     isEditing.value = false;
     message.value = '';
 };
 
+// บันทึกการแก้ไข
 const saveProduct = async () => {
     if (!isAdmin.value) {
         alert('คุณไม่มีสิทธิ์แก้ไขสินค้า');
@@ -310,7 +319,7 @@ const saveProduct = async () => {
             }
         );
         
-   
+        // Refresh ข้อมูลสินค้าจาก server
         try {
             const res = await axios.get(`http://localhost:3000/products/${id.value}`);
             products.value = res.data;
@@ -342,6 +351,7 @@ const saveProduct = async () => {
     }
 };
 
+// เมื่อ Click เพื่อเพิ่มสินค้า ตรวจสอบการ Login ก่อน
 const chkLogin = async () => {
     if (isLoading.value) return;
     
@@ -351,6 +361,8 @@ const chkLogin = async () => {
         const res = await axios.get(`http://localhost:3000/members/detail`);
         login.value = res.data.login;
         mem_email.value = res.data.mem_email;
+        
+        console.log('Login status:', login.value);
 
         if (login.value) {
             await chkCart();
@@ -372,6 +384,7 @@ const chkLogin = async () => {
     }
 };
 
+// ตรวจสอบตะกร้าค้าง
 const chkCart = async () => {
     
     const members = {
@@ -384,6 +397,7 @@ const chkCart = async () => {
         if (response.data.cartExists) {
             cartId.value = response.data.cartId;
         }
+
     } catch (err) {
         console.error('Error in chkCart:', err);
     }
@@ -398,7 +412,6 @@ const addCart = async () => {
     
     try {
         const response = await axios.post(`http://localhost:3000/carts/addcart`, customer);
-
         
         backendMessage.value = response.data.messageAddCart;
         cartId.value = response.data.cartId || response.data.messageAddCart;
@@ -410,7 +423,6 @@ const addCart = async () => {
 
 // เอาสินค้าใส่ตะกร้า
 const addCartDtl = async () => {
-    
     if (!products.value || products.value.length === 0) {
         throw new Error('ไม่พบข้อมูลสินค้า');
     }
@@ -418,26 +430,38 @@ const addCartDtl = async () => {
     const cartdetail = {
         cartId: cartId.value,
         pdId: id.value,
-        pdPrice: products.value[0].price
+        pdPrice: products.value[0].price,
+        qty: qtyToAdd.value
     };
-
-    
+        
     try {
         const response = await axios.post(
             `http://localhost:3000/carts/addcartdtl`,
             cartdetail,
             { withCredentials: true }
         );
-
         
-        // อัพเดท Store
-        cartStore.updateQty();
+        // อัพเดท Store ด้วยจำนวนล่าสุดจาก backend
+        const sumResponse = await axios.get(`http://localhost:3000/carts/sumcart/${cartId.value}`);
+        const sumQty = Number(sumResponse.data?.qty) || 0;
+        cartStore.setDisplayQty(sumQty);
         cartStore.setId(cartId.value);
-        
+
         backendMessage.value = response.data.messageAddCartDtl;
     } catch (err) {
         console.error('Error in addCartDtl:', err);
         throw err;
+    }
+};
+
+// ปรับจำนวนที่จะใส่ตะกร้า
+const incrementQty = () => {
+    qtyToAdd.value += 1;
+};
+
+const decrementQty = () => {
+    if (qtyToAdd.value > 1) {
+        qtyToAdd.value -= 1;
     }
 };
 </script>
@@ -660,6 +684,47 @@ const addCartDtl = async () => {
     display: flex;
     gap: 1rem;
     flex-wrap: wrap;
+}
+
+.qty-selector {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border: 2px solid #d9d1f2;
+    border-radius: 10px;
+    background: #f7f2ff;
+}
+
+.btn-qty {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    border: none;
+    background: linear-gradient(135deg, #6f42c1 0%, #5a32a3 100%);
+    color: #f8f5ff;
+    font-weight: 700;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-qty:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-qty:not(:disabled):hover {
+    background: linear-gradient(135deg, #7b55cf 0%, #6a3cb5 100%);
+    transform: translateY(-1px);
+}
+
+.qty-value {
+    min-width: 32px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: #3a1f6e;
 }
 
 .btn {
