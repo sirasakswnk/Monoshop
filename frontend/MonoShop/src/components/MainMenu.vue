@@ -52,6 +52,7 @@
               <a class="nav-link dropdown-toggle d-flex align-items-center gap-2 plant-account" href="#" role="button"
                 data-bs-toggle="dropdown" aria-expanded="false">
                 <img
+                  :key="authStore.imageTimestamp"
                   :src="profileImageUrl"
                   :alt="mem_email || 'profile image'"
                   class="avatar"
@@ -152,6 +153,14 @@ watch(
     } else {
       clearMemberData();
     }
+  }
+);
+
+watch(
+  () => authStore.imageTimestamp,
+  () => {
+    // Force re-render and retry loading when profile image was updated
+    imgOK.value = true;
   }
 );
 
