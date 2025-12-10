@@ -20,18 +20,19 @@
     const router = useRouter();
     const route = useRoute();
     import { useCartStore } from '@/stores/cartStore';
+    import { storeToRefs } from 'pinia';
     const cartStore = useCartStore()
+    const { cartId: cartIdRef, displayQty } = storeToRefs(cartStore)
 
 
     const mem_email=ref(null)
-    const cartId=ref()
     const money=ref(0)
     const id=ref(null)
     
-    const qty = computed(() => cartStore.displayQty)
+    const qty = computed(() => displayQty.value)
     const goToCart = () => {
-        if (cartId.value) {
-            router.push(`/cartShow/${cartId.value}`)
+        if (cartIdRef.value) {
+            router.push(`/cartShow/${cartIdRef.value}`)
         } else {
             alert('คุณยังไม่มีสินค้าในตะกร้า')
         }
@@ -40,8 +41,8 @@
     const refreshCart = async () => {
         await getMember()
         await chkCart()
-        if (cartId.value) {
-            await sumCart(cartId.value)
+        if (cartIdRef.value) {
+            await sumCart(cartIdRef.value)
         } else {
             money.value = 0
             cartStore.setDisplayQty(0)
@@ -49,7 +50,7 @@
     }
     
     watch(()=>cartStore.theQty,(newValue,oldValue)=>{
-        id.value=cartStore.cartId
+        id.value=cartIdRef.value
         if (id.value) {
             sumCart(id.value)
         }
@@ -86,15 +87,16 @@
                 const response = await axios.post(`${API_BASE_URL}/carts/chkcart`,members)
                 
                 if (response.data.cartExists && response.data.cartId) {
-                    cartId.value = response.data.cartId
+                    cartIdRef.value = response.data.cartId
+                    cartStore.setId(response.data.cartId)
                 } else {
-                    cartId.value = null
+                    cartIdRef.value = null
                     money.value = 0
                     cartStore.setDisplayQty(0)
                 }
         }
         catch(err){
-            cartId.value = null
+            cartIdRef.value = null
             money.value = 0
             cartStore.setDisplayQty(0)
         }                
@@ -111,7 +113,8 @@
     const sumCart=async(cid)=>{
         await axios.get(`${API_BASE_URL}/carts/sumcart/${cid}`)
         .then(res => {
-            cartId .value = res.data.id
+            cartIdRef.value = res.data.id
+            cartStore.setId(res.data.id)
             const sumQty = Number(res.data.qty) || 0
             money.value = res.data.money
             cartStore.setDisplayQty(sumQty)
