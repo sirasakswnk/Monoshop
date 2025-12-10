@@ -40,7 +40,7 @@ app.use(cors({
 }))
 
 // เผื่อบาง browser ส่ง preflight OPTIONS
-app.options('*', cors())
+// app.options('*', cors())
 
 // เสิร์ฟรูป
 app.use("/img_pd", express.static("img_pd"))
