@@ -22,7 +22,7 @@ app.set('trust proxy', 1)
 const allowedOrigins = [
   'http://localhost:5173',
   'http://127.0.0.1:5173',
-  'https://monocraft-frontend.vercel.app',   // 👈 แก้เป็นโดเมนจริงจาก Vercel
+  'https://monoshopy3.vercel.app/',   // 👈 แก้เป็นโดเมนจริงจาก Vercel
 ]
 
 // ใช้ฟังก์ชันเช็ค origin
