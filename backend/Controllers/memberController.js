@@ -132,14 +132,14 @@ export async function loginMembers(req,res){
                 maxAge: 3600000,
                 httpOnly: true,
                 secure : true,
-                sameSite : 'strict'
+                sameSite : 'none'
             })
         return res.json({ message: `Your account has been logged in successfully`, login:true })
         }else {
             res.clearCookie('token',{
                 httpOnly: true,
                 secure : true,
-                sameSite : 'strict'
+                sameSite : 'none'
             })
         return res.status(401).json({ message: "Invalid password", login: false });
 }
@@ -157,7 +157,7 @@ export async function logoutMembers(req,res){
     res.clearCookie('token',{
         httpOnly: true,
         secure : true,
-        sameSite : 'strict'
+        sameSite : 'none'
     })
     return res.json({ message: `Your account has been logged out successfully`, login:false })
 }
@@ -234,7 +234,7 @@ export async function updateMembers(req, res) {
             maxAge: 3600000,
             httpOnly: true,
             secure: true,
-            sameSite: 'strict'
+            sameSite: 'none'
         });
 
         return res.json({

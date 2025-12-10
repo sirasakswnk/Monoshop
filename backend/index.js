@@ -15,20 +15,17 @@ dotenv.config()
 const app = express()
 const port = process.env.PORT || 3000
 
-// ถ้าใช้ cookie ข้ามโดเมน (Vercel <-> Render) แนะนำให้ trust proxy
 app.set('trust proxy', 1)
 
-// ✅ กำหนด origin ที่อนุญาต
 const allowedOrigins = [
+  process.env.FRONTEND_ORIGIN, 
   'http://localhost:5173',
   'http://127.0.0.1:5173',
-  'https://monoshopy3.vercel.app',   // 👈 แก้เป็นโดเมนจริงจาก Vercel
-]
+].filter(Boolean)
 
-// ใช้ฟังก์ชันเช็ค origin
 app.use(cors({
   origin: function(origin, callback) {
-    // กรณี request จาก tools บางอย่างที่ไม่ส่ง origin (เช่น curl, Postman)
+    // สำหรับเครื่องมือที่ไม่ส่ง origin (postman/curl)
     if (!origin) return callback(null, true)
     if (allowedOrigins.includes(origin)) {
       return callback(null, true)
@@ -36,11 +33,14 @@ app.use(cors({
     return callback(new Error('Not allowed by CORS'), false)
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  credentials: true,
+  credentials: true, 
 }))
 
-// เผื่อบาง browser ส่ง preflight OPTIONS
-// app.options('*', cors())
+// Preflight
+app.options('*', cors({
+  origin: allowedOrigins,
+  credentials: true,
+}))
 
 // เสิร์ฟรูป
 app.use("/img_pd", express.static("img_pd"))
