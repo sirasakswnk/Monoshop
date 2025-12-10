@@ -220,7 +220,7 @@ const isEditing = ref(false);
 const isSaving = ref(false);
 const message = ref('');
 const messageType = ref('');
-
+const baseURL = API_BASE_URL;
 // Computed property เพื่อตรวจสอบว่าเป็น admin หรือไม่
 const isAdmin = computed(() => {
     return role.value?.toLowerCase() === 'admin';
@@ -310,7 +310,7 @@ const saveProduct = async () => {
     
     try {
         const response = await axios.put(
-            `http://localhost:3000/products/${id.value}`,
+            `${API_BASE_URL}/products/${id.value}`,
             {
                 productname: editForm.productname,
                 price: editForm.price,
